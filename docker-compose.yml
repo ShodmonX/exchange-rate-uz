@@ -15,6 +15,8 @@ services:
     volumes:
       - ./app:/app
       - ./shared:/app/shared
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
 
   bot:
     build:
