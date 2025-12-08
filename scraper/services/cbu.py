@@ -1,12 +1,13 @@
 from aiohttp import ClientSession
 
+from sqlalchemy.future import select
 import datetime
-import json
 
 from shared.db import LocalAsyncSession
+from shared.db.models import Currency
 from shared.db.crud import set_exchange_rate
 from shared.schemas import ExchangeRateIn
-from shared.utils import redis
+from shared.utils import cacher
 
 
 async def get_currencies():
@@ -21,25 +22,35 @@ async def get_currencies():
     
     return data
 
-async def add_db(data: list[dict]):
+@cacher(ttl=3600)
+async def get_currency_map(session):
+    result = await session.execute(
+        select(Currency.id, Currency.code)
+    )
+    return {code: id for id, code in result.all()}
+
+async def add_db(data):
     async with LocalAsyncSession() as session:
-        currencies = await redis.get("currencies")
-        currencies = json.loads(currencies)
-        for i in data:
+        currency_map = await get_currency_map(session)
+
+        for row in data:
+            code = row["Ccy"]
+            cid = currency_map.get(code)
+
+            if not cid:
+                continue
+
             exchange_rate = ExchangeRateIn(
                 date=datetime.date.today(),
-                buy_rate=i['Rate'],
-                sell_rate=i['Rate'],
+                buy_rate=row["Rate"],
+                sell_rate=row["Rate"],
                 bank_id=1,
-                currency_id=get_currency_id(i['Ccy'], currencies),
+                currency_id=cid
             )
             await set_exchange_rate(session, exchange_rate)
 
-def get_currency_id(code: str, currencies: list[dict]):
-    for c in currencies:
-        if c['code'] == code:
-            return c['id']
-    return 1
+        await session.commit()
+
         
 async def cbu_main():
     data = await get_currencies()
