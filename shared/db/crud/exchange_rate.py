@@ -8,19 +8,23 @@ from shared.db.models import ExchangeRate
 from shared.schemas import ExchangeRateIn
 
 
-async def get_exchange_rates_by_currency(db: AsyncSession, currency_id: int):
+async def get_exchange_rates_by_currency(db: AsyncSession, currency_id: int, today: bool = True):
     query = select(ExchangeRate).options(
         joinedload(ExchangeRate.currency),
         joinedload(ExchangeRate.bank),
     ).where(ExchangeRate.currency_id == currency_id)
+    if today:
+        query = query.where(ExchangeRate.date == date.today())
     result = await db.execute(query)
     return result.scalars().all()
 
-async def get_exchange_rates_by_bank(db: AsyncSession, bank_id: int):
+async def get_exchange_rates_by_bank(db: AsyncSession, bank_id: int, today: bool = True):
     query = select(ExchangeRate).options(
         joinedload(ExchangeRate.currency),
         joinedload(ExchangeRate.bank),
     ).where(ExchangeRate.bank_id == bank_id)
+    if today:
+        query = query.where(ExchangeRate.date == date.today())
     result = await db.execute(query)
     return result.scalars().all()
 

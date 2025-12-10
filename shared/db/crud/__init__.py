@@ -1,3 +1,3 @@
-from .bank import get_available_banks
-from .currency import get_available_currencies
+from .bank import get_available_banks, get_bank_by_code
+from .currency import get_available_currencies, get_currency_by_code
 from .exchange_rate import get_exchange_rates_today, get_exchange_rates_by_bank, get_exchange_rates_by_currency, set_exchange_rate

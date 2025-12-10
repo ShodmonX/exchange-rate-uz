@@ -1,13 +1,11 @@
 from aiohttp import ClientSession
 
-from sqlalchemy.future import select
 import datetime
 
 from shared.db import LocalAsyncSession
-from shared.db.models import Currency
 from shared.db.crud import set_exchange_rate
 from shared.schemas import ExchangeRateIn
-from shared.utils import cacher
+from shared.utils import get_currency_map
 
 
 async def get_currencies():
@@ -21,13 +19,6 @@ async def get_currencies():
                     data.append(currency)
     
     return data
-
-@cacher(ttl=3600)
-async def get_currency_map(session):
-    result = await session.execute(
-        select(Currency.id, Currency.code)
-    )
-    return {code: id for id, code in result.all()}
 
 async def add_db(data):
     async with LocalAsyncSession() as session:
