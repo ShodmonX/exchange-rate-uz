@@ -2,20 +2,20 @@ import asyncio
 import signal
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from services.cbu import cbu_main
-from services.anorbank import anorbank_main
+from services import cbu_main, anorbank_main, sqb_main
 
 async def scheduled_job():
     print("Running async scraper job...")
     await cbu_main()
     await anorbank_main()
+    await sqb_main()
     print("Scraper job finished.")
 
 async def main():
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         scheduled_job,
-        CronTrigger(hour=8, minute=0, timezone="Asia/Tashkent"),
+        CronTrigger(hour=14, minute=5, timezone="Asia/Tashkent"),
     )
 
     print("Scheduler started. Waiting for jobs...")
